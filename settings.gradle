@@ -1,1 +1,4 @@
 include ':app'
+include ':opencv'
+project(':opencv').projectDir = new File(System.getenv('OPENCV_ANDROID_SDK') + '/sdk')
+//project(':opencv').projectDir = new File('/Users/lauszus/Documents/OpenCV-android-sdk' + '/sdk')
