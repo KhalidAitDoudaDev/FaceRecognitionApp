@@ -7,10 +7,7 @@
     android:fitsSystemWindows="true"
     tools:context=".FaceRecognitionAppActivity">
 
-    <com.lauszus.facerecognitionapp.JavaCameraView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/camera_java_surface_view" />
+    <include layout="@layout/camera_view" />
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

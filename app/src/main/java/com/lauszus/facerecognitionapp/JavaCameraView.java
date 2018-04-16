@@ -1,5 +1,4 @@
-// Source: https://github.com/opencv/opencv/blob/master/modules/java/generator/src/java/android+JavaCameraView.java
-// Modified to used modified CameraBridgeViewBase
+// Based on: https://github.com/opencv/opencv/blob/master/modules/java/generator/android/java/org/opencv/android/JavaCameraView.java
 
 package com.lauszus.facerecognitionapp;
 
@@ -44,8 +43,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     protected Camera mCamera;
     protected JavaCameraFrame[] mCameraFrame;
     private SurfaceTexture mSurfaceTexture;
-
-    private int previewFormat = ImageFormat.NV21;
+    private int mPreviewFormat = ImageFormat.NV21;
 
     public static class JavaCameraSizeAccessor implements ListItemAccessor {
 
@@ -150,11 +148,13 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     /* Select the size that fits surface considering maximum size allowed */
                     Size frameSize = calculateCameraFrameSize(sizes, new JavaCameraSizeAccessor(), width, height);
 
-                    params.setPreviewFormat(ImageFormat.NV21);
-
-                    // See: http://stackoverflow.com/a/27233595/2175837
-                    if (isEmulator()) // Check if we are using the Android emulator
+                    /* Image format NV21 causes issues in the Android emulators */
+                    if (isEmulator())
                         params.setPreviewFormat(ImageFormat.YV12);
+                    else
+                        params.setPreviewFormat(ImageFormat.NV21);
+
+                    mPreviewFormat = params.getPreviewFormat();
 
                     Log.d(TAG, "Set preview size to " + Integer.valueOf((int)frameSize.width) + "x" + Integer.valueOf((int)frameSize.height));
                     params.setPreviewSize((int)frameSize.width, (int)frameSize.height);
@@ -170,7 +170,6 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 
                     mCamera.setParameters(params);
                     params = mCamera.getParameters();
-                    previewFormat = params.getPreviewFormat();
 
                     mFrameWidth = params.getPreviewSize().width;
                     mFrameHeight = params.getPreviewSize().height;
@@ -278,7 +277,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
             synchronized (this) {
                 this.notify();
             }
-            Log.d(TAG, "Wating for thread");
+            Log.d(TAG, "Waiting for thread");
             if (mThread != null)
                 mThread.join();
         } catch (InterruptedException e) {
@@ -314,10 +313,13 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 
         @Override
         public Mat rgba() {
-            if (previewFormat == ImageFormat.NV21)
+            if (mPreviewFormat == ImageFormat.NV21)
                 Imgproc.cvtColor(mYuvFrameData, mRgba, Imgproc.COLOR_YUV2RGBA_NV21, 4);
-            else if (previewFormat == ImageFormat.YV12)
+            else if (mPreviewFormat == ImageFormat.YV12)
                 Imgproc.cvtColor(mYuvFrameData, mRgba, Imgproc.COLOR_YUV2RGB_I420, 4);  // COLOR_YUV2RGBA_YV12 produces inverted colors
+            else
+                throw new IllegalArgumentException("Preview Format can be NV21 or YV12");
+
             return mRgba;
         }
 
